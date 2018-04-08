@@ -21,16 +21,16 @@ related:
     url: https://github.com/webpack/webpack.js.org/issues/652
 ---
 
-T> 本指南继续沿用[起步](/guides/getting-started)、[管理输出](/guides/output-management)和[代码分离](/guides/code-splitting)中的代码示例。
+T> 本指南继续沿用[起步](/guides/getting-started)、[输出管理](/guides/output-management)和[代码分离](/guides/code-splitting)中的代码示例。
 
-以上，我们使用 webpack 来打包我们的模块化后的应用程序，webpack 会生成一个可部署的 `/dist` 目录，然后把打包后的内容放置在此目录中。只要 `/dist` 目录中的内容部署到服务器上，客户端（通常是浏览器）就能够访问网站此服务器的网站及其资源。而最后一步获取资源是比较耗费时间的，这就是为什么浏览器使用一种名为[缓存](http://searchstorage.techtarget.com/definition/cache)的技术。可以通过命中缓存，以降低网络流量，使网站加载速度更快，然而，如果我们在部署新版本时不更改资源的文件名，浏览器可能会认为它没有被更新，就会使用它的缓存版本。由于缓存的存在，当你需要获取新的代码时，就会显得很棘手。
+以上，我们使用 webpack 来打包我们的模块化后的应用程序，webpack 会生成一个可部署的 `/dist` 目录，然后把打包后的内容放置在此目录中。只要 `/dist` 目录中的内容部署到服务器上，就能通过客户端（通常是浏览器）访问此服务器上的网站及静态资源（/dist目录的文件）。而获取服务器资源是比较耗时的，因此浏览器使用了一种叫[缓存](http://searchstorage.techtarget.com/definition/cache)的技术。可以通过命中缓存，以减少网络流量，加快网站加载速度，然而，如果想要获取最新修改的代码，这也会引起很头疼的问题。
 
-此指南的重点在于通过必要的配置，以确保 webpack 编译生成的文件能够被客户端缓存，而在文件内容变化后，能够请求到新的文件。
+此指南的重点在于配置，以确保 webpack 编译生成的文件能够被客户端缓存，而在文件内容变化后，又能够获取到新的更改。
 
 
-## 输出文件的文件名(Output Filenames)
+## 输出文件名称(Output Filenames)
 
-通过使用 `output.filename` 进行[文件名替换](/configuration/output#output-filename)，可以确保浏览器获取到修改后的文件。`[hash]` 替换可以用于在文件名中包含一个构建相关(build-specific)的 hash，但是更好的方式是使用 `[chunkhash]` 替换，在文件名中包含一个 chunk 相关(chunk-specific)的哈希。
+通过使用 `output.filename` 进行[文件名替换](/configuration/output#output-filename)，可以确保浏览器获取到修改后的文件。`[hash]` 替换可以用于在文件名中包含一个与构建相关(build-specific)的 hash值，但是更好的方式是使用 `[chunkhash]` 替换，在文件名中包含一个 chunk 相关(chunk-specific)的哈希。
 
 让我们使用[起步](/guides/getting-started) 中的示例，以及[管理输出](/guides/output-management) 中的 `plugins` 来作为项目的基础，所以我们不必手动处理维护 `index.html` 文件：
 
@@ -90,7 +90,7 @@ Child html-webpack-plugin for "index.html":
         + 2 hidden modules
 ```
 
-可以看到，bundle 的名称是它内容（通过 hash）的映射。如果我们不做修改，然后再次运行构建，我们以为文件名会保持不变。然而，如果我们真的运行，可能会发现情况并非如此：（译注：这里的意思是，如果不做修改，文件名可能会变，也可能不会。）
+可以看到，bundle 的名称是它内容（通过 hash）的映射。如果我们不做修改，然后再次build，我们以为文件名会保持不变。然而，如果我们真的运行，可能会发现情况并非如此：（译注：这里的意思是，如果不做修改，文件名可能会变，也可能不会。）
 
 ``` bash
 Hash: f7a289a94c5e4cd1e566
@@ -116,7 +116,7 @@ W> 输出可能会因当前的 webpack 版本而稍有差异。新版本不一�
 
 ## 提取模板(Extracting Boilerplate)
 
-就像我们之前从[代码分离](/guides/code-splitting)了解到的，[`CommonsChunkPlugin`](/plugins/commons-chunk-plugin) 可以用于将模块分离到单独的文件中。然而 `CommonsChunkPlugin` 有一个较少有人知道的功能是，能够在每次修改后的构建结果中，将 webpack 的样板(boilerplate)和 manifest 提取出来。通过指定 `entry` 配置中未用到的名称，此插件会自动将我们需要的内容提取到单独的包中：
+就像我们之前从[代码分离](/guides/code-splitting)了解到的，[`CommonsChunkPlugin`](/plugins/commons-chunk-plugin) 可以用于将模块分离到单独的文件中。然而 `CommonsChunkPlugin` 有一个少有人知的功能，能够在每次修改后的build结果中，将 webpack 的样板(boilerplate)和 manifest 提取出来。通过指定 `entry` 配置中未用到的名称，此插件会自动将我们需要的内容提取到单独的包中：
 
 __webpack.config.js__
 
@@ -145,7 +145,7 @@ __webpack.config.js__
   };
 ```
 
-让我们再次构建，然后查看提取出来的 `manifest` bundle：
+再次build，然后查看提取出来的 `manifest` bundle：
 
 ``` bash
 Hash: 80552632979856ddab34
@@ -161,7 +161,7 @@ manifest.719796322be98041fff2.js    5.82 kB       1  [emitted]         manifest
     + 1 hidden module
 ```
 
-将第三方库(library)（例如 `lodash` 或 `react`）提取到单独的 `vendor` chunk 文件中，是比较推荐的做法，这是因为，它们很少像本地的源代码那样频繁修改。因此通过实现以上步骤，利用客户端的长效缓存机制，可以通过命中缓存来消除请求，并减少向服务器获取资源，同时还能保证客户端代码和服务器端代码版本一致。这可以通过使用新的 `entry(入口)` 起点，以及再额外配置一个 `CommonsChunkPlugin` 实例的组合方式来实现：
+比较推荐的做法是，将第三方库(library)（例如 `lodash` 或 `react`）单独提取到一个大的 `vendor` 文件中。因为相较于频繁地修改本地代码，很少会去修改第三方类库。因此通过以上配置，利用客户端的长效缓存机制，减少向服务器请求的次数，同时还能保证客户端和服务器端代码一致。具体可以通过使用组合使用 `entry` 和 `CommonsChunkPlugin` 实例来实现：
 
 __webpack.config.js__
 
@@ -198,9 +198,9 @@ __webpack.config.js__
   };
 ```
 
-W> 注意，引入顺序在这里很重要。`CommonsChunkPlugin` 的 `'vendor'` 实例，必须在 `'manifest'` 实例之前引入。
+W> 注意，引入顺序很重要。`CommonsChunkPlugin` 的 `'vendor'` 实例，必须在 `'manifest'` 实例之前引入。
 
-让我们再次构建，然后查看新的 `vendor` bundle：
+再次build，然后查看新的 `vendor` bundle：
 
 ``` bash
 Hash: 69eb92ebf8935413280d
@@ -221,7 +221,7 @@ manifest.004a1114de8bcf026622.js    5.85 kB       2  [emitted]         manifest
 
 ## 模块标识符(Module Identifiers)
 
-让我们向项目中再添加一个模块 `print.js`：
+让我们向项目中再添加一个新模块 `print.js`：
 
 __project__
 
@@ -263,7 +263,7 @@ __src/index.js__
   document.body.appendChild(component());
 ```
 
-再次运行构建，然后我们期望的是，只有 `main` bundle 的 hash 发生变化，然而……
+再次build，我们期望的是，只有 `main` bundle 的 hash 发生变化，然而……
 
 ``` bash
 Hash: d38a06644fdbb898d795
@@ -282,13 +282,13 @@ manifest.1400d5af64fc1b7b3a45.js    5.85 kB       2  [emitted]         manifest
     + 1 hidden module
 ```
 
-……我们可以看到这三个文件的 hash 都变化了。这是因为每个 [`module.id`](/api/module-variables#module-id-commonjs-) 会基于默认的解析顺序(resolve order)进行增量。也就是说，当解析顺序发生变化，ID 也会随之改变。因此，简要概括：
+……但是可以看到三个文件的 hash 都变化了。这是因为每个 [`module.id`](/api/module-variables#module-id-commonjs-) 会基于默认的解析顺序(resolve order)进行增量。也就是说，当解析顺序发生变化，ID 也会随之改变。因此，简要概括：
 
-- `main` bundle 会随着自身的新增内容的修改，而发生变化。
+- `main` bundle 因为新增内容，而发生变化。
 - `vendor` bundle 会随着自身的 `module.id` 的修改，而发生变化。
 - `manifest` bundle 会因为当前包含一个新模块的引用，而发生变化。
 
-第一个和最后一个都是符合预期的行为 -- 而 `vendor` 的 hash 发生变化是我们要修复的。幸运的是，可以使用两个插件来解决这个问题。第一个插件是 [`NamedModulesPlugin`](/plugins/named-modules-plugin)，将使用模块的路径，而不是数字标识符。虽然此插件有助于在开发过程中输出结果的可读性，然而执行时间会长一些。第二个选择是使用 [`HashedModuleIdsPlugin`](/plugins/hashed-module-ids-plugin)，推荐用于生产环境构建：
+第一个和最后一个都是可预期的行为 -- 而 `vendor` 的 hash 发生变化是我们要修复的。幸运的是，有两个可用的插件来解决这个问题。第一个是 [`NamedModulesPlugin`](/plugins/named-modules-plugin)，将使用模块的路径，而不是数字标识符。虽然此插件在开发过程中有助于提高输出的可读性，然而执行时间会长一些。第二个选择是使用 [`HashedModuleIdsPlugin`](/plugins/hashed-module-ids-plugin)，推荐用于生产环境构建：
 
 __webpack.config.js__
 
@@ -325,7 +325,7 @@ __webpack.config.js__
   };
 ```
 
-现在，不管再添加任何新的本地依赖，对于每次构建，`vendor` hash 都应该保持一致：
+现在，不管再添加任何新的本地依赖，对于每次build，`vendor` hash 都保持一致：
 
 ``` bash
 Hash: 1f49b42afb9a5acfbaff
@@ -344,7 +344,7 @@ manifest.d2a6dc1ccece13f5a164.js    5.85 kB       2  [emitted]         manifest
     + 1 hidden module
 ```
 
-然后，修改我们的 `src/index.js`，临时移除额外的依赖：
+现在，修改 `src/index.js`，暂时移除新加的依赖：
 
 __src/index.js__
 
@@ -367,7 +367,7 @@ __src/index.js__
   document.body.appendChild(component());
 ```
 
-最后，再次运行我们的构建：
+最后，重新build一下：
 
 ``` bash
 Hash: 37e1358f135c0b992f72
@@ -385,12 +385,12 @@ manifest.bb5820632fb66c3fb357.js    5.85 kB       2  [emitted]         manifest
     + 1 hidden module
 ```
 
-我们可以看到，这两次构建中，`vendor` bundle 的文件名称，都是 `eed6dcc3b30cfa138aaa`。
+我们可以看到，两次build结果里，`vendor` bundle 的文件名称，都是 `eed6dcc3b30cfa138aaa`。
 
 
 ## 结论
 
-缓存从凌乱变得清晰直接。然而以上预先演示，只能帮助你在部署一致性(deploying consistent)和资源可缓存(cachable assets)方面，有个好的开始。想要了解更多信息，请查看以下的_进一步阅读_部分。
+缓存从凌乱变得清晰直接。然而以上配置走下来一遍，也只能帮助你在部署一致性(deploying consistent)和资源缓存(cachable assets)方面，有个好的开始。想要了解更多信息，请查看以下的_进一步阅读_部分。
 
 ***
 
